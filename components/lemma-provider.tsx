@@ -1,21 +1,29 @@
 "use client"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { setTestingToken, getTestingToken } from "lemma-sdk"
-import { useState, useEffect, type ReactNode } from "react"
+import { setTestingToken } from "lemma-sdk"
+import { useState, type ReactNode } from "react"
 import { getLemmaClient } from "@/lib/lemma"
 import { useAuth } from "lemma-sdk/react"
+import { BrainIcon, KeyIcon, LogInIcon, Loader2Icon } from "lucide-react"
 
-function AuthBanner() {
-  const { isAuthenticated } = useAuth(getLemmaClient())
+function AuthGate({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth(getLemmaClient())
   const [showTokenInput, setShowTokenInput] = useState(false)
   const [token, setToken] = useState("")
 
-  if (isAuthenticated) return null
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (isAuthenticated) return <>{children}</>
 
   function handleSignIn() {
-    const client = getLemmaClient()
-    client.auth.redirectToAuth({
+    getLemmaClient().auth.redirectToAuth({
       redirectUri: window.location.href,
     })
   }
@@ -28,49 +36,62 @@ function AuthBanner() {
   }
 
   return (
-    <div className="border-b border-yellow-500/30 bg-yellow-500/10 px-4 py-2">
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-xs text-yellow-700 dark:text-yellow-300">
-          Not connected to Lemma — data features require authentication.
-        </p>
-        <div className="flex items-center gap-2">
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="mx-4 w-full max-w-sm space-y-6 text-center">
+        <div className="flex justify-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20">
+            <BrainIcon className="size-7 text-white" />
+          </div>
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Second Brain</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sign in to access your AI-powered knowledge engine.
+          </p>
+        </div>
+        <div className="space-y-3">
           <button
             onClick={handleSignIn}
-            className="rounded-md bg-foreground px-3 py-1 text-xs font-medium text-background hover:bg-foreground/90"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
           >
-            Sign In
+            <LogInIcon className="size-4" />
+            Sign in with Lemma
           </button>
           <button
             onClick={() => setShowTokenInput(!showTokenInput)}
-            className="rounded-md border px-3 py-1 text-xs font-medium hover:bg-accent"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium hover:bg-accent transition-colors"
           >
-            Use Token
+            <KeyIcon className="size-4" />
+            Use API Token
           </button>
         </div>
+        {showTokenInput && (
+          <form onSubmit={handleTokenSubmit} className="space-y-2">
+            <input
+              type="password"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Paste your Lemma token..."
+              className="w-full rounded-xl border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <button
+              type="submit"
+              disabled={!token.trim()}
+              className="w-full rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            >
+              Connect
+            </button>
+          </form>
+        )}
+        <p className="text-xs text-muted-foreground/60">
+          Powered by Lemma
+        </p>
       </div>
-      {showTokenInput && (
-        <form onSubmit={handleTokenSubmit} className="mt-2 flex gap-2">
-          <input
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Paste Lemma token..."
-            className="flex-1 rounded-md border bg-transparent px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-          <button
-            type="submit"
-            disabled={!token.trim()}
-            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
-          >
-            Connect
-          </button>
-        </form>
-      )}
     </div>
   )
 }
 
-export { AuthBanner }
+export { AuthGate }
 
 export function LemmaProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(

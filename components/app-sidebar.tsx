@@ -14,6 +14,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "lemma-sdk/react"
+import { getLemmaClient } from "@/lib/lemma"
 import { ModeToggle } from "@/components/shared/mode-toggle"
 import { Button } from "@/components/ui/button"
 
@@ -45,6 +47,10 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { user } = useAuth(getLemmaClient())
+  const displayName = user?.name || user?.email?.split("@")[0] || "User"
+  const displayEmail = user?.email || ""
+  const initial = displayName[0]?.toUpperCase() || "U"
 
   return (
     <Sidebar className="border-r border-gray-100 bg-white dark:border-zinc-800 dark:bg-zinc-950">
@@ -96,11 +102,11 @@ export function AppSidebar() {
         {/* User Profile Section */}
         <div className="flex items-center gap-2.5 rounded-xl p-2 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors duration-200">
           <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500/10 to-teal-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-sm border border-emerald-500/10 shadow-inner">
-            T
+            {initial}
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-xs font-semibold text-foreground truncate leading-none mb-1">Tanay</span>
-            <span className="text-[10px] text-muted-foreground truncate leading-none">tanay@secondbrain.ai</span>
+            <span className="text-xs font-semibold text-foreground truncate leading-none mb-1">{displayName}</span>
+            {displayEmail && <span className="text-[10px] text-muted-foreground truncate leading-none">{displayEmail}</span>}
           </div>
           <Button
             variant="ghost"

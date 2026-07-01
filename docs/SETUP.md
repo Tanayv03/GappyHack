@@ -147,3 +147,57 @@ docs/pod/
 └── workflows/
     └── process-note.json       # nodes, edges, input schema
 ```
+
+## 9. Deploy to Lemma
+
+The app is a fully client-side Next.js SPA — no server-side features — so it exports as static files.
+
+### Configure for static export
+
+In `next.config.ts`:
+
+```ts
+import type { NextConfig } from "next"
+
+const nextConfig: NextConfig = {
+  output: "export",
+}
+
+export default nextConfig
+```
+
+In `.env.local`, point the SDK directly at the Lemma API (no rewrite proxy in static mode):
+
+```env
+NEXT_PUBLIC_LEMMA_API_URL=https://api.lemma.work
+NEXT_PUBLIC_LEMMA_AUTH_URL=https://lemma.work/auth
+NEXT_PUBLIC_LEMMA_POD_ID=<your-pod-id>
+NEXT_PUBLIC_LEMMA_ORG_ID=<your-org-id>
+```
+
+### Build and deploy
+
+```bash
+rm -rf .next out
+pnpm build                    # produces out/ directory with static HTML/JS/CSS
+
+VITE_LEMMA_API_URL=https://api.lemma.work \
+VITE_LEMMA_AUTH_URL=https://lemma.work/auth \
+VITE_LEMMA_POD_ID=<your-pod-id> \
+lemma apps deploy secondbrain --dist-dir out --create --yes
+```
+
+The `VITE_LEMMA_*` env vars satisfy the deploy CLI's validation — the actual app config is baked in from the `NEXT_PUBLIC_*` vars at build time.
+
+### Make it public
+
+By default the app is `POD` visibility (pod members only). To make it publicly accessible:
+
+```bash
+lemma apps update secondbrain --data '{"visibility": "PUBLIC"}'
+```
+
+### Result
+
+The app will be live at `https://secondbrain.apps.lemma.work`.
+Users need to be logged into Lemma for auth to work (the SDK reads the auth token from `localStorage`).
