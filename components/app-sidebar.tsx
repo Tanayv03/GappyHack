@@ -18,6 +18,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "lemma-sdk/react"
 import { getLemmaClient } from "@/lib/lemma"
+import { clearTestingToken } from "lemma-sdk"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -159,9 +160,15 @@ export function AppSidebar() {
                 </DropdownMenuLinkItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => {
+                  onClick={async () => {
                     localStorage.removeItem("second_brain_logged_in")
                     localStorage.removeItem("second_brain_user_email")
+                    clearTestingToken()
+                    try {
+                      await getLemmaClient().auth.signOut()
+                    } catch (e) {
+                      console.error("Lemma signOut failed:", e)
+                    }
                     window.location.reload()
                   }}
                   className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
