@@ -18,7 +18,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     const hasTestingToken = typeof window !== "undefined" && !!localStorage.getItem("lemma_testing_token")
     if (!isLoading && !isAuthenticated && !hasTestingToken) {
       getLemmaClient().auth.redirectToAuth({
-        redirectUri: window.location.origin,
+        redirectUri: window.location.origin + "/",
       })
     }
   }, [isLoading, isAuthenticated])
@@ -37,7 +37,7 @@ function AuthGate({ children }: { children: ReactNode }) {
 
   function handleSignIn() {
     getLemmaClient().auth.redirectToAuth({
-      redirectUri: window.location.origin,
+      redirectUri: window.location.origin + "/",
     })
   }
 
