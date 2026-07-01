@@ -29,9 +29,11 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [token, setToken] = useState("")
   const [hasToken, setHasToken] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   // Load token status on mount
   useEffect(() => {
+    setMounted(true)
     const activeToken = getTestingToken()
     if (activeToken) {
       setHasToken(true)
@@ -199,7 +201,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setTheme("light")}
                   className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all ${
-                    theme === "light"
+                    mounted && theme === "light"
                       ? "border-emerald-500 bg-emerald-500/5 text-emerald-600"
                       : "border-gray-200 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-900 text-muted-foreground"
                   }`}
@@ -210,7 +212,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setTheme("dark")}
                   className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all ${
-                    theme === "dark"
+                    mounted && theme === "dark"
                       ? "border-emerald-500 bg-emerald-500/5 text-emerald-600"
                       : "border-gray-200 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-900 text-muted-foreground"
                   }`}
@@ -221,7 +223,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setTheme("system")}
                   className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-medium transition-all ${
-                    theme === "system"
+                    mounted && theme === "system"
                       ? "border-emerald-500 bg-emerald-500/5 text-emerald-600"
                       : "border-gray-200 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-900 text-muted-foreground"
                   }`}
