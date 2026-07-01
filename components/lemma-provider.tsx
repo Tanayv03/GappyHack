@@ -13,6 +13,16 @@ function AuthGate({ children }: { children: ReactNode }) {
   const [showTokenInput, setShowTokenInput] = useState(false)
   const [token, setToken] = useState("")
 
+  useEffect(() => {
+    // Auto-redirect to Lemma auth if not authenticated and no developer token is present
+    const hasTestingToken = typeof window !== "undefined" && !!localStorage.getItem("lemma_testing_token")
+    if (!isLoading && !isAuthenticated && !hasTestingToken) {
+      getLemmaClient().auth.redirectToAuth({
+        redirectUri: window.location.origin,
+      })
+    }
+  }, [isLoading, isAuthenticated])
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-zinc-50 dark:bg-zinc-950">
