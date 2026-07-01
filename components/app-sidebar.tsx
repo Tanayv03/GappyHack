@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   BrainIcon,
   ChevronsUpDownIcon,
@@ -11,6 +12,7 @@ import {
   SearchIcon,
   NetworkIcon,
   SettingsIcon,
+  LogOutIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -19,6 +21,7 @@ import { getLemmaClient } from "@/lib/lemma"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLinkItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -57,8 +60,14 @@ export function AppSidebar() {
   const pathname = usePathname()
   const { isMobile } = useSidebar()
   const { user } = useAuth(getLemmaClient())
-  const displayName = user?.name || user?.email?.split("@")[0] || "User"
-  const displayEmail = user?.email || ""
+  const [localEmail, setLocalEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLocalEmail(localStorage.getItem("second_brain_user_email"))
+  }, [])
+
+  const displayName = user?.name || user?.email?.split("@")[0] || localEmail?.split("@")[0] || "User"
+  const displayEmail = user?.email || localEmail || ""
   const initial = displayName[0]?.toUpperCase() || "U"
 
   return (
@@ -148,6 +157,18 @@ export function AppSidebar() {
                   <SettingsIcon />
                   <span>Settings</span>
                 </DropdownMenuLinkItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    localStorage.removeItem("second_brain_logged_in")
+                    localStorage.removeItem("second_brain_user_email")
+                    window.location.reload()
+                  }}
+                  className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
+                >
+                  <LogOutIcon className="size-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
