@@ -10,8 +10,11 @@ import { useEffect } from "react"
 
 function getRedirectUri() {
   if (typeof window === "undefined") return "https://secondbrain.apps.lemma.work/"
-  return window.location.hostname === "localhost"
-    ? "http://localhost:3000/"
+  const isLocal = window.location.hostname === "localhost" || 
+                  window.location.hostname === "127.0.0.1" ||
+                  window.location.hostname.startsWith("192.168.")
+  return isLocal 
+    ? window.location.origin + "/" 
     : "https://secondbrain.apps.lemma.work/"
 }
 
