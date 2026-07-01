@@ -2,7 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { LemmaProvider, AuthGate } from "@/components/lemma-provider"
+import { LemmaProvider } from "@/components/lemma-provider"
 import { ChatDrawerProvider } from "@/context/chat-drawer-context"
 import { AppShell } from "@/components/app-shell"
 import { Toaster } from "@/components/ui/sonner"
@@ -37,12 +37,10 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <LemmaProvider>
-            <AuthGate>
-              <ChatDrawerProvider>
-                <AppShell>{children}</AppShell>
-                <Toaster />
-              </ChatDrawerProvider>
-            </AuthGate>
+            <ChatDrawerProvider>
+              <AppShell>{children}</AppShell>
+              <Toaster />
+            </ChatDrawerProvider>
           </LemmaProvider>
         </ThemeProvider>
       </body>
