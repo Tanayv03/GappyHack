@@ -2,11 +2,10 @@ import { Geist, Geist_Mono } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { LemmaProvider } from "@/components/lemma-provider"
+import { LemmaProvider, AuthGate } from "@/components/lemma-provider"
 import { ChatDrawerProvider } from "@/context/chat-drawer-context"
 import { AppShell } from "@/components/app-shell"
 import { Toaster } from "@/components/ui/sonner"
-import { AppAuthGate } from "@/components/app-auth-gate"
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -39,9 +38,9 @@ export default function RootLayout({
         <ThemeProvider>
           <LemmaProvider>
             <ChatDrawerProvider>
-              <AppAuthGate>
+              <AuthGate>
                 <AppShell>{children}</AppShell>
-              </AppAuthGate>
+              </AuthGate>
               <Toaster />
             </ChatDrawerProvider>
           </LemmaProvider>
