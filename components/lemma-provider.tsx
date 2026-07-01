@@ -4,9 +4,17 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { setTestingToken } from "lemma-sdk"
 import { useEffect, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { getLemmaClient, getLemmaConfigError } from "@/lib/lemma"
-import { useAuth } from "lemma-sdk/react"
-import { AlertTriangleIcon, BrainIcon, KeyIcon, LogInIcon, Loader2Icon, UserPlusIcon } from "lucide-react"
+import { getConfiguredLemmaPodId, getLemmaClient, getLemmaConfigError } from "@/lib/lemma"
+import { useAuth, usePodAccess } from "lemma-sdk/react"
+import {
+  AlertTriangleIcon,
+  BrainIcon,
+  KeyIcon,
+  LogInIcon,
+  Loader2Icon,
+  ShieldAlertIcon,
+  UserPlusIcon,
+} from "lucide-react"
 
 const AUTH_RETURN_TO_KEY = "secondbrain.auth.returnTo"
 
@@ -43,7 +51,13 @@ function AuthConfigError({ message }: { message: string }) {
 }
 
 function AuthGateInner({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading, redirectToAuth } = useAuth(getLemmaClient())
+  const lemmaClient = getLemmaClient()
+  const { isAuthenticated, isLoading, redirectToAuth } = useAuth(lemmaClient)
+  const podAccess = usePodAccess({
+    client: lemmaClient,
+    podId: getConfiguredLemmaPodId(),
+    enabled: isAuthenticated,
+  })
   const router = useRouter()
   const [showTokenInput, setShowTokenInput] = useState(false)
   const [token, setToken] = useState("")
@@ -60,11 +74,24 @@ function AuthGateInner({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, router])
 
-  if (isLoading) {
+  if (isLoading || (isAuthenticated && podAccess.isLoading)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
       </div>
+    )
+  }
+
+  if (isAuthenticated && !podAccess.hasAccess) {
+    return (
+      <PodAccessRequired
+        isPending={podAccess.status === "pending"}
+        isSubmitting={podAccess.isRequestingAccess}
+        error={podAccess.error?.message}
+        onRequestAccess={() => {
+          void podAccess.requestAccess()
+        }}
+      />
     )
   }
 
@@ -148,6 +175,51 @@ function AuthGateInner({ children }: { children: ReactNode }) {
             )}
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+function PodAccessRequired({
+  isPending,
+  isSubmitting,
+  error,
+  onRequestAccess,
+}: {
+  isPending: boolean
+  isSubmitting: boolean
+  error?: string
+  onRequestAccess: () => void
+}) {
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="mx-4 w-full max-w-md space-y-5 rounded-lg border bg-card p-5 text-card-foreground shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+            <ShieldAlertIcon className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-base font-semibold">Pod access required</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              You are signed in, but this Second Brain app stores notes in a fixed app pod. Ask the pod admin to approve access before using the workspace.
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <p className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={onRequestAccess}
+          disabled={isPending || isSubmitting}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? "Requesting access..." : isPending ? "Access request sent" : "Request pod access"}
+        </button>
       </div>
     </div>
   )
