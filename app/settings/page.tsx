@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
-import { setTestingToken, getTestingToken } from "lemma-sdk"
+import { setTestingToken, getTestingToken, clearTestingToken } from "lemma-sdk"
+import { getLemmaClient } from "@/lib/lemma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +22,7 @@ import {
   CheckCircle2Icon,
   AlertTriangleIcon,
   CpuIcon,
+  LogOutIcon,
 } from "lucide-react"
 
 export default function SettingsPage() {
@@ -72,6 +74,22 @@ export default function SettingsPage() {
         window.location.reload()
       }, 1000)
     }
+  }
+
+  // Handle Sign Out
+  const handleSignOut = async () => {
+    localStorage.removeItem("second_brain_logged_in")
+    localStorage.removeItem("second_brain_user_email")
+    clearTestingToken()
+    try {
+      await getLemmaClient().auth.signOut()
+    } catch (e) {
+      console.error("Lemma signOut failed:", e)
+    }
+    toast.success("Signed out successfully! Redirecting...")
+    setTimeout(() => {
+      window.location.href = "/"
+    }, 1000)
   }
 
   return (
@@ -261,6 +279,36 @@ export default function SettingsPage() {
               >
                 <Trash2Icon className="size-3.5 mr-1.5" />
                 Clear Cache
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Section 4: Account & Security */}
+        <Card className="rounded-2xl border border-gray-200/80 dark:border-zinc-800/80 shadow-sm bg-white dark:bg-zinc-950">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <LogOutIcon className="size-4.5 text-red-500" />
+              <CardTitle className="text-base font-semibold">Account Session</CardTitle>
+            </div>
+            <CardDescription>
+              Manage your active session or log out of this device.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-foreground">Sign Out of Application</p>
+                <p className="text-[11px] text-muted-foreground">Terminate your current session and require re-authentication next time.</p>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-xs rounded-xl h-9 font-medium shadow-md shadow-red-600/10 hover:shadow-lg hover:shadow-red-600/20"
+              >
+                <LogOutIcon className="size-3.5 mr-1.5" />
+                Sign Out
               </Button>
             </div>
           </CardContent>
