@@ -104,7 +104,7 @@ VITE_LEMMA_ORG_ID=<your-org-id>
 
 For production, set the API URL to the real Lemma API URL (e.g. `https://api.lemma.work`).
 
-`NEXT_PUBLIC_LEMMA_POD_ID` and `VITE_LEMMA_POD_ID` should point at the same shared pod. The Next app accepts either prefix at build time, but keeping both in sync avoids CLI/deploy confusion. The pod is intentionally not derived from the signed-in user. If this value is missing or points at the wrong pod, collaborators can end up reading or writing data in a different Lemma pod.
+`NEXT_PUBLIC_LEMMA_POD_ID` and `VITE_LEMMA_POD_ID` should point at the same app pod. The Next app accepts either prefix at build time, but keeping both in sync avoids CLI/deploy confusion. The pod acts like the deployed app's backend database; it is intentionally not derived from the signed-in user. RLS keeps each user's records separate inside that pod. If this value is missing or points at the wrong pod, collaborators can end up reading or writing data in a different Lemma pod.
 
 ## 7. Verify Setup
 
@@ -201,7 +201,7 @@ lemma apps deploy secondbrain --dist-dir out --create --yes
 
 The deploy command commonly uses `VITE_LEMMA_*` because the Lemma CLI validates those names. `next.config.ts` mirrors `VITE_LEMMA_*` into the baked Next client env at build time, so building with only `VITE_LEMMA_*` now works.
 
-Before building/deploying, confirm the printed pod is the shared Second Brain pod. Signed-in collaborators must also have access to that pod; authentication identifies the user, while the configured pod id selects the workspace.
+Before building/deploying, confirm the printed pod is the Second Brain app pod. Signed-in collaborators must also have access to that pod; authentication identifies the user, while the configured pod id selects the backend workspace. RLS keeps their notes, tasks, and insights scoped to their authenticated account.
 
 ### Make it public
 

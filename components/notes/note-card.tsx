@@ -27,7 +27,10 @@ import {
   SparklesIcon,
   CalendarIcon,
   Loader2Icon,
+  AlertCircleIcon,
+  RotateCcwIcon,
 } from "lucide-react"
+import { getMetadata, getProcessingLabel, getProcessingStatus } from "@/lib/knowledge-metadata"
 
 interface NoteCardProps {
   note: {
@@ -39,6 +42,7 @@ interface NoteCardProps {
     summary: string | null
     processed: boolean
     created_at: string
+    metadata?: unknown
   }
   onClick?: (note: NoteCardProps["note"]) => void
   onEdit: (note: NoteCardProps["note"]) => void
@@ -83,6 +87,9 @@ const typeConfig: Record<string, { label: string; gradient: string; badge: strin
 export function NoteCard({ note, onClick, onEdit, onDelete, onProcess, isProcessing = false }: NoteCardProps) {
   const config = typeConfig[note.type] ?? typeConfig.note
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const processingStatus = getProcessingStatus(note, isProcessing)
+  const processingError = getMetadata(note.metadata).processing?.error
+  const canProcess = processingStatus === "idle" || processingStatus === "failed"
 
   return (
     <>
@@ -115,17 +122,23 @@ export function NoteCard({ note, onClick, onEdit, onDelete, onProcess, isProcess
                 <PencilIcon className="mr-2 size-4" />
                 Edit
               </DropdownMenuItem>
-              {!note.processed && (
+              {canProcess && (
                 <DropdownMenuItem
                   disabled={isProcessing}
                   onClick={() => onProcess(note.id)}
                 >
-                  {isProcessing ? (
+                  {processingStatus === "failed" ? (
+                    <RotateCcwIcon className="mr-2 size-4" />
+                  ) : isProcessing ? (
                     <Loader2Icon className="mr-2 size-4 animate-spin" />
                   ) : (
                     <SparklesIcon className="mr-2 size-4" />
                   )}
-                  {isProcessing ? "Processing..." : "Process with AI"}
+                  {processingStatus === "failed"
+                    ? "Retry AI processing"
+                    : isProcessing
+                      ? "Processing..."
+                      : "Process with AI"}
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
@@ -148,16 +161,26 @@ export function NoteCard({ note, onClick, onEdit, onDelete, onProcess, isProcess
           >
             {config.label}
           </Badge>
-          {note.processed && (
+          {processingStatus === "processed" && (
             <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-700 dark:text-emerald-300">
               <SparklesIcon className="mr-1 size-2.5" />
               processed
             </Badge>
           )}
-          {isProcessing && (
+          {(processingStatus === "queued" || processingStatus === "processing") && (
             <Badge variant="outline" className="border-amber-500/20 bg-amber-500/10 text-[10px] text-amber-700 dark:text-amber-300">
               <Loader2Icon className="mr-1 size-2.5 animate-spin" />
-              processing
+              {getProcessingLabel(processingStatus)}
+            </Badge>
+          )}
+          {processingStatus === "failed" && (
+            <Badge
+              variant="outline"
+              title={processingError || "AI processing failed"}
+              className="border-red-500/20 bg-red-500/10 text-[10px] text-red-700 dark:text-red-300"
+            >
+              <AlertCircleIcon className="mr-1 size-2.5" />
+              failed
             </Badge>
           )}
         </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useTasks, useUpdateTask } from "@/hooks/use-lemma"
+import { useNotes, useTasks, useUpdateTask } from "@/hooks/use-lemma"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select"
 import { useState } from "react"
 import { toast } from "sonner"
-import { ListTodoIcon } from "lucide-react"
+import { FileTextIcon, ListTodoIcon } from "lucide-react"
 
 const priorityColors: Record<string, string> = {
   low: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
@@ -34,7 +34,9 @@ export function TaskList() {
       ? [{ field: "status", op: "eq", value: statusFilter }]
       : undefined
   )
+  const { records: notes } = useNotes()
   const { update } = useUpdateTask()
+  const noteMap = new Map(notes.map((note: Record<string, unknown>) => [note.id as string, note]))
 
   async function toggleDone(taskId: string, currentStatus: string) {
     const newStatus = currentStatus === "done" ? "pending" : "done"
@@ -124,7 +126,7 @@ export function TaskList() {
                       {String(task.description)}
                     </p>
                   ) : null}
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge
                       variant="secondary"
                       className={`text-[10px] ${priorityColors[String(task.priority ?? "medium")] ?? priorityColors.medium}`}
@@ -135,6 +137,15 @@ export function TaskList() {
                       <span className="text-[10px] text-muted-foreground">
                         Due: {new Date(String(task.due_date)).toLocaleDateString()}
                       </span>
+                    ) : null}
+                    {task.note_id && noteMap.has(task.note_id as string) ? (
+                      <Link
+                        href={`/notes?open=${encodeURIComponent(task.note_id as string)}`}
+                        className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                      >
+                        <FileTextIcon className="size-3" />
+                        From: {String(noteMap.get(task.note_id as string)?.title ?? "note")}
+                      </Link>
                     ) : null}
                   </div>
                 </div>

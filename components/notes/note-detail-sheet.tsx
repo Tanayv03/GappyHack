@@ -28,9 +28,12 @@ import {
   LinkIcon,
   ExternalLinkIcon,
   Loader2Icon,
+  AlertCircleIcon,
+  RotateCcwIcon,
 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { getMetadata, getProcessingLabel, getProcessingStatus } from "@/lib/knowledge-metadata"
 
 const typeConfig: Record<string, { label: string; badge: string }> = {
   note: {
@@ -70,6 +73,7 @@ interface NoteDetailSheetProps {
     processed: boolean
     source_url?: string
     created_at: string
+    metadata?: unknown
   } | null
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -91,6 +95,10 @@ export function NoteDetailSheet({
   if (!note) return null
 
   const config = typeConfig[note.type] ?? typeConfig.note
+  const processingStatus = getProcessingStatus(note, isProcessing)
+  const metadata = getMetadata(note.metadata)
+  const processingError = metadata.processing?.error
+  const canProcess = processingStatus === "idle" || processingStatus === "failed"
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -100,16 +108,22 @@ export function NoteDetailSheet({
             <Badge variant="outline" className={`text-[10px] font-medium ${config.badge}`}>
               {config.label}
             </Badge>
-            {note.processed && (
+            {processingStatus === "processed" && (
               <Badge variant="outline" className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-700 dark:text-emerald-300">
                 <SparklesIcon className="mr-1 size-2.5" />
                 processed
               </Badge>
             )}
-            {isProcessing && (
+            {(processingStatus === "queued" || processingStatus === "processing") && (
               <Badge variant="outline" className="border-amber-500/20 bg-amber-500/10 text-[10px] text-amber-700 dark:text-amber-300">
                 <Loader2Icon className="mr-1 size-2.5 animate-spin" />
-                processing
+                {getProcessingLabel(processingStatus)}
+              </Badge>
+            )}
+            {processingStatus === "failed" && (
+              <Badge variant="outline" className="border-red-500/20 bg-red-500/10 text-[10px] text-red-700 dark:text-red-300">
+                <AlertCircleIcon className="mr-1 size-2.5" />
+                failed
               </Badge>
             )}
           </div>
@@ -133,6 +147,15 @@ export function NoteDetailSheet({
                 AI Summary
               </p>
               <p className="text-sm leading-relaxed">{note.summary}</p>
+            </div>
+          )}
+
+          {processingStatus === "failed" && processingError && (
+            <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/5 p-3">
+              <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-red-700 dark:text-red-300">
+                Processing failed
+              </p>
+              <p className="text-sm text-red-700 dark:text-red-300">{processingError}</p>
             </div>
           )}
 
@@ -187,7 +210,7 @@ export function NoteDetailSheet({
             <PencilIcon className="mr-1.5 size-3.5" />
             Edit
           </Button>
-          {!note.processed && (
+          {canProcess && (
             <Button
               variant="outline"
               size="sm"
@@ -198,12 +221,18 @@ export function NoteDetailSheet({
                 onOpenChange(false)
               }}
             >
-              {isProcessing ? (
+              {processingStatus === "failed" ? (
+                <RotateCcwIcon className="mr-1.5 size-3.5" />
+              ) : isProcessing ? (
                 <Loader2Icon className="mr-1.5 size-3.5 animate-spin" />
               ) : (
                 <SparklesIcon className="mr-1.5 size-3.5" />
               )}
-              {isProcessing ? "Processing" : "Process"}
+              {processingStatus === "failed"
+                ? "Retry"
+                : isProcessing
+                  ? "Processing"
+                  : "Process"}
             </Button>
           )}
           <AlertDialog>

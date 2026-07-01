@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useInsights } from "@/hooks/use-lemma"
+import { useInsights, useNotes } from "@/hooks/use-lemma"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import {
   FileTextIcon,
   TrendingUpIcon,
 } from "lucide-react"
+import { getSourceRefs } from "@/lib/knowledge-metadata"
 
 const typeConfig: Record<
   string,
@@ -47,6 +48,8 @@ const typeConfig: Record<
 
 export function InsightList() {
   const { records: insights, isLoading } = useInsights()
+  const { records: notes } = useNotes()
+  const noteMap = new Map(notes.map((note: Record<string, unknown>) => [note.id as string, note]))
 
   if (isLoading) {
     return (
@@ -82,6 +85,7 @@ export function InsightList() {
       {insights.map((insight: Record<string, unknown>) => {
         const config = typeConfig[(insight.type as string) ?? "key_point"] ?? typeConfig.key_point
         const Icon = config.icon
+        const sourceRefs = getSourceRefs(insight.metadata)
 
         return (
           <Card key={insight.id as string} className="transition-shadow hover:shadow-sm">
@@ -89,7 +93,7 @@ export function InsightList() {
               <Icon className={`mt-0.5 size-4 shrink-0 ${config.color}`} />
               <div className="flex-1 space-y-1">
                 <p className="text-sm">{insight.content as string}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="text-[10px]">
                     {(insight.type as string)?.replace("_", " ")}
                   </Badge>
@@ -98,6 +102,24 @@ export function InsightList() {
                       {((insight.confidence as number) * 100).toFixed(0)}% confidence
                     </span>
                   )}
+                  {insight.note_id && noteMap.has(insight.note_id as string) ? (
+                    <Link
+                      href={`/notes?open=${encodeURIComponent(insight.note_id as string)}`}
+                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+                    >
+                      <FileTextIcon className="size-3" />
+                      From: {String(noteMap.get(insight.note_id as string)?.title ?? "note")}
+                    </Link>
+                  ) : null}
+                  {sourceRefs.slice(0, 2).map((source, index) => (
+                    <span
+                      key={`${source.type}-${source.id ?? source.url ?? source.path ?? index}`}
+                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground"
+                    >
+                      <FileTextIcon className="size-3" />
+                      {source.title ?? source.path ?? source.url ?? source.type}
+                    </span>
+                  ))}
                 </div>
               </div>
             </CardContent>

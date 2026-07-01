@@ -29,7 +29,9 @@ function AuthConfigError({ message }: { message: string }) {
           </div>
           <div>
             <h1 className="text-base font-semibold">Lemma setup is incomplete</h1>
-            <p className="text-sm text-muted-foreground">Second Brain needs a fixed shared pod before anyone signs in.</p>
+            <p className="text-sm text-muted-foreground">
+              Second Brain needs a fixed app pod before anyone signs in. User records stay separated by Lemma auth and RLS.
+            </p>
           </div>
         </div>
         <p className="rounded-lg bg-muted p-3 font-mono text-xs text-muted-foreground">
