@@ -8,6 +8,13 @@ import { useAuth } from "lemma-sdk/react"
 import { BrainIcon, KeyIcon, LogInIcon, Loader2Icon } from "lucide-react"
 import { useEffect } from "react"
 
+function getRedirectUri() {
+  if (typeof window === "undefined") return "https://secondbrain.apps.lemma.work/"
+  return window.location.hostname === "localhost"
+    ? "http://localhost:3000/"
+    : "https://secondbrain.apps.lemma.work/"
+}
+
 function AuthGate({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth(getLemmaClient())
   const [showTokenInput, setShowTokenInput] = useState(false)
@@ -18,7 +25,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     const hasTestingToken = typeof window !== "undefined" && !!localStorage.getItem("lemma_testing_token")
     if (!isLoading && !isAuthenticated && !hasTestingToken) {
       getLemmaClient().auth.redirectToAuth({
-        redirectUri: window.location.origin + "/",
+        redirectUri: getRedirectUri(),
       })
     }
   }, [isLoading, isAuthenticated])
@@ -37,7 +44,7 @@ function AuthGate({ children }: { children: ReactNode }) {
 
   function handleSignIn() {
     getLemmaClient().auth.redirectToAuth({
-      redirectUri: window.location.origin + "/",
+      redirectUri: getRedirectUri(),
     })
   }
 
